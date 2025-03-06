@@ -1,0 +1,121 @@
+@page "/json-viewer"
+@rendermode InteractiveServer
+@using MudBlazor
+@using System.Text.Json
+@inject JsonFileService JsonService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+
+
+<h3>📂 JSON Viewer</h3>
+
+@if (fileNames == null)
+{
+    <p>⏳ Loading JSON files...</p>
+}
+else if (!fileNames.Any())
+{
+    <p>🚫 No JSON files found.</p>
+}
+else
+{
+    <div class="json-container">
+        @foreach (var file in fileNames)
+        {
+            <div class="json-item">
+                <!-- Button to Toggle Details -->
+                <button class="json-toggle-btn" @onclick="() => ToggleDetails(file)">
+                    📄 @file - @GetJsonPreview(file)
+                </button>
+                <MudButton @onclick="() => OpenJsonDialog(file)" Variant="MudBlazor.Variant.Filled" Color="Color.Primary">
+                    View Full JSON
+                </MudButton>
+                @if (expandedFiles.Contains(file))
+                {
+                    <pre class="json-details">@GetJsonPreview(file)</pre>
+                }
+            </div>
+        }
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(PdfBase64))
+{
+    <iframe src="data:application/pdf;base64,@PdfBase64" width="100%" height="600px"></iframe>
+}
+else
+{
+    <p>Loading PDF...</p>
+}
+@code {
+    private List<string> fileNames = new();
+    private Dictionary<string, List<Skill>?> jsonData = new();
+    private HashSet<string> expandedFiles = new();
+    private string PdfBase64 = "";
+
+
+    private async Task OpenJsonDialog(string file)
+    {
+        if (!jsonData.ContainsKey(file) || jsonData[file] == null) return;
+
+        var parameters = new DialogParameters
+        {
+            ["JsonContent"] = GetJsonDetails(file),
+            ["FileName"] = file
+        };
+
+        var options = new MudBlazor.DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        };
+
+        await DialogService.ShowAsync<Dialog_Example>(file, parameters, options);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        fileNames = JsonService.GetJsonFileNames() ?? new List<string>();
+
+        // Load JSON files in parallel
+        var tasks = fileNames.Select(async file =>
+        {
+            var data = await JsonService.ReadJsonFileAsync(file);
+            if (data != null)
+                jsonData[file] = data;
+        });
+
+        await Task.WhenAll(tasks);
+    }
+
+    private void ToggleDetails(string file)
+    {
+        if (expandedFiles.Contains(file))
+        {
+            expandedFiles.Remove(file);
+        }
+        else
+        {
+            expandedFiles.Add(file);
+        }
+        StateHasChanged();
+    }
+
+    private string GetJsonPreview(string file)
+    {
+        if (!jsonData.ContainsKey(file) || jsonData[file] == null) return "❌ Invalid JSON";
+
+        var json = JsonSerializer.Serialize(jsonData[file]);
+        return json.Length > 50 ? json.Substring(0, 50) + "..." : json;
+    }
+
+    private string GetJsonDetails(string file)
+    {
+        if (!jsonData.ContainsKey(file) || jsonData[file] == null) return "❌ Invalid JSON";
+
+        return JsonSerializer.Serialize(jsonData[file], new JsonSerializerOptions { WriteIndented = true });
+    }
+}

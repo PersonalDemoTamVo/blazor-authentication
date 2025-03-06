@@ -1,0 +1,36 @@
+@using MudBlazor
+@inject IJSRuntime JSRuntime
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Description" Class="mr-2" />
+            @FileName
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Elevation="0" Class="pa-4 overflow-auto" Style="max-height: 70vh;">
+            <pre class="json-content">@JsonContent</pre>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CopyToClipboard" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.ContentCopy">
+            Copy
+        </MudButton>
+        <MudButton OnClick="Cancel" Color="Color.Default">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public string JsonContent { get; set; } = string.Empty;
+    [Parameter] public string FileName { get; set; } = string.Empty;
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", JsonContent);
+        // Optional: Show a snackbar or toast notification
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

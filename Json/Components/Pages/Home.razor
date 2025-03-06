@@ -1,0 +1,30 @@
+﻿@page "/"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+
+<AuthorizeView>
+    <Authorized>
+        <h3>Welcome, @userName!</h3>
+        <p>Your role: @userRole</p>
+    </Authorized>
+    <NotAuthorized>
+        <p>Please <a href="/login" class="btn btn-danger">log in</a> to access this page.</p>
+    </NotAuthorized>
+</AuthorizeView>
+@code {
+    private string userName = "Guest";
+    private string userRole = "None";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        {
+            userName = user.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown";
+            userRole = user.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown";
+        }
+    }
+}

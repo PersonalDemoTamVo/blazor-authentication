@@ -1,0 +1,33 @@
+@page "/upload"
+@inject FileService FileService
+
+<div height="80vh">
+    <h3>Upload DOCX and Preview PDF</h3>
+
+    <InputFile OnChange="HandleFileSelected" />
+    @if (!string.IsNullOrEmpty(pdfUrl))
+    {
+        <iframe src="@pdfUrl" width="100%"></iframe>
+    }
+</div>
+
+
+@code {
+    private string pdfUrl;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+
+        var filePath = await FileService.ProcessFile(stream, file.Name); // Change method signature
+
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            var fileName = Path.GetFileName(filePath);
+            pdfUrl = $"/pdf-files/{fileName}"; // Convert path to a relative URL
+        }
+    }
+}

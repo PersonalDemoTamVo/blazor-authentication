@@ -1,0 +1,70 @@
+@page "/authen"
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using Json.Components.Service.Authen
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.ComponentModel.DataAnnotations
+
+@inject CustomAuthenticationService AuthService
+@inject CustomAuthStateProvider AuthStateProvider
+@inject NavigationManager navManager
+
+
+<input @bind="userIdentifier" placeholder="Username" />
+<input @bind="password" placeholder="Password" type="password" />
+<button @onclick="SignIn">Sign in</button>
+<button @onclick="Logout">Logout</button>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center my-4 py-4">
+    <MudPaper Elevation="3" Class="pa-4" Style="width: 100%; max-width: 500px;">
+        <MudStack Spacing="4">
+            <MudText Typo="Typo.h4" Class="text-center">Welcome Back</MudText>
+            <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="text-center">Sign in to your account</MudText>
+
+            <MudTextField @bind-Value="userIdentifier" Label="Username or Email" Variant="MudBlazor.Variant.Outlined"
+                FullWidth="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person"
+                AdornmentColor="Color.Primary" />
+
+            <MudTextField @bind-Value="password" Label="Password" Variant="MudBlazor.Variant.Outlined" FullWidth="true"
+                Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" AdornmentColor="Color.Primary">
+            </MudTextField>
+
+            <MudButton Variant="MudBlazor.Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
+                OnClick="SignIn" Class="mt-2">
+                Sign In
+            </MudButton>
+
+            <MudText Align="Align.Center" Class="mt-2">
+                Don't have an account? <MudLink Href="/register" Underline="Underline.Always">Sign up</MudLink>
+            </MudText>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+
+<AuthorizeView>
+    <Authorized>
+        <p>Hello, @AuthStateProvider.CurrentAccount.Username!</p>
+        <p>Your role is: @AuthStateProvider.CurrentAccount.Role</p>
+    </Authorized>
+    <NotAuthorized>
+        <p>You're not authorized.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public string userIdentifier = string.Empty;
+    public string password = string.Empty;
+
+    private async void SignIn()
+    {
+        await AuthStateProvider.LoginAsync(userIdentifier, password);
+        navManager.NavigateTo("/", true);
+    }
+
+    private async void Logout()
+    {
+        await AuthStateProvider.LogoutAsync();
+    }
+
+}

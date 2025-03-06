@@ -1,0 +1,36 @@
+@page "/search-skills"
+@using Json.Components.Service.Search
+@inject SkillService SkillService
+
+<h3>Search Skills</h3>
+<button @onclick="IndexSkills">Index Skills</button>
+<input type="text" @bind="searchQuery" placeholder="Enter skill..." />
+<button @onclick="PerformSearch">Search</button>
+
+@if (searchResults != null && searchResults.Count > 0)
+{
+    <ul>
+        @foreach (var skill in searchResults)
+        {
+            <li>@skill.Name (@skill.Category)</li>
+        }
+    </ul>
+}
+else if (searchResults != null)
+{
+    <p>No results found.</p>
+}
+
+@code {
+    private async Task IndexSkills()
+    {
+        await SkillService.IndexSkillsFromJsonAsync();
+    }
+    private string searchQuery = string.Empty;
+    private List<Skill> searchResults = new();
+
+    private async Task PerformSearch()
+    {
+        searchResults = await SkillService.SearchSkillsAsync(searchQuery);
+    }
+}
