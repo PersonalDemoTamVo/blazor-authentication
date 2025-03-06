@@ -1,0 +1,24 @@
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@using Microsoft.AspNetCore.Components.Authorization
+
+<AuthorizeView>
+    <Authorized>
+        <button @onclick="Logout">Logout</button>
+    </Authorized>
+    <NotAuthorized>
+        <button @onclick="Login">Login</button>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private void Login()
+    {
+        Navigation.NavigateTo("/login"); // Redirect to login page
+    }
+
+    private void Logout()
+    {
+        Navigation.NavigateTo("/logout"); // Redirect to logout page (handle session clearing)
+    }
+}
